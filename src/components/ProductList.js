@@ -1,8 +1,11 @@
 import React from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, ImageList, ImageListItem } from '@mui/material';
 
-function ProductList({ products, onProductDeleted }) {
+function ProductList({ products, onProductDeleted, onProductEdited }) {
+  const navigate = useNavigate();
+
   const deleteProduct = async (id) => {
     try {
       await axios.delete(`/api/produtos/${id}`);
@@ -10,6 +13,11 @@ function ProductList({ products, onProductDeleted }) {
     } catch (error) {
       console.error('Erro ao deletar produto:', error);
     }
+  };
+
+  const handleEdit = (id) => {
+    console.log('Editing product with id:', id);
+    navigate(`/edit-product/${id}`);
   };
 
   return (
@@ -33,7 +41,7 @@ function ProductList({ products, onProductDeleted }) {
                   {product.imagens && product.imagens.map((img, index) => (
                     <ImageListItem key={index}>
                       <img
-                        src={`${process.env.REACT_APP_API_URL}/uploads/${img}`}
+                        src={`/uploads/${img}`}
                         alt={`Produto ${product.nome}`}
                         loading="lazy"
                       />
@@ -46,7 +54,19 @@ function ProductList({ products, onProductDeleted }) {
               <TableCell>{product.descricao}</TableCell>
               <TableCell>R$ {product.preco.toFixed(2)}</TableCell>
               <TableCell>
-                <Button variant="contained" color="secondary" onClick={() => deleteProduct(product.id)}>
+                <Button 
+                  variant="contained" 
+                  color="primary" 
+                  onClick={() => handleEdit(product.id)}
+                  style={{ marginRight: '10px' }}
+                >
+                  Editar
+                </Button>
+                <Button 
+                  variant="contained" 
+                  color="secondary" 
+                  onClick={() => deleteProduct(product.id)}
+                >
                   Deletar
                 </Button>
               </TableCell>

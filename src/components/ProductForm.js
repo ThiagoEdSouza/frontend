@@ -18,6 +18,7 @@ function ProductForm({ onProductAdded }) {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
 
+  //Adicionando um Produto no Form
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     try {
       const response = await axios.post('/api/produtos', values);
@@ -48,6 +49,7 @@ function ProductForm({ onProductAdded }) {
     }
   };
 
+  //Alterando Imagens
   const handleImageChange = (event) => {
     setImages([...images, ...event.target.files]);
   };
