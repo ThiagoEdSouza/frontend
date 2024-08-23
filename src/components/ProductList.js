@@ -1,9 +1,15 @@
 import React from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, ImageList, ImageListItem } from '@mui/material';
+import { Table, TableBody, TableHead, TableRow, Paper, TableContainer } from '@mui/material';
+import { 
+  StyledTableCell, 
+  ActionButton, 
+  ImageContainer, 
+  ProductImage 
+} from './ProductList.styles';
 
-function ProductList({ products, onProductDeleted, onProductEdited }) {
+function ProductList({ products, onProductDeleted }) {
   const navigate = useNavigate();
 
   const deleteProduct = async (id) => {
@@ -25,51 +31,44 @@ function ProductList({ products, onProductDeleted, onProductEdited }) {
       <Table>
         <TableHead>
           <TableRow>
-            <TableCell>Imagens</TableCell>
-            <TableCell>Nome</TableCell>
-            <TableCell>Código</TableCell>
-            <TableCell>Descrição</TableCell>
-            <TableCell>Preço</TableCell>
-            <TableCell>Ações</TableCell>
+            <StyledTableCell>Imagens</StyledTableCell>
+            <StyledTableCell>Nome</StyledTableCell>
+            <StyledTableCell>Código</StyledTableCell>
+            <StyledTableCell>Descrição</StyledTableCell>
+            <StyledTableCell>Preço</StyledTableCell>
+            <StyledTableCell>Ações</StyledTableCell>
           </TableRow>
         </TableHead>
         <TableBody>
           {products.map((product) => (
             <TableRow key={product.id}>
-              <TableCell>
-                <ImageList cols={3} rowHeight={100}>
-                  {product.imagens && product.imagens.map((img, index) => (
-                    <ImageListItem key={index}>
-                      <img
-                        src={`/uploads/${img}`}
-                        alt={`Produto ${product.nome}`}
-                        loading="lazy"
-                      />
-                    </ImageListItem>
-                  ))}
-                </ImageList>
-              </TableCell>
-              <TableCell>{product.nome}</TableCell>
-              <TableCell>{product.codigo}</TableCell>
-              <TableCell>{product.descricao}</TableCell>
-              <TableCell>R$ {product.preco.toFixed(2)}</TableCell>
-              <TableCell>
-                <Button 
+              <StyledTableCell>
+              <ImageContainer>
+                {product.imagens && Array.isArray(product.imagens) && product.imagens.map((img, index) => (
+                  <ProductImage key={index} src={`/uploads/${img}`} alt={`Produto ${product.nome}`} />
+                ))}
+              </ImageContainer>
+              </StyledTableCell>
+              <StyledTableCell>{product.nome}</StyledTableCell>
+              <StyledTableCell>{product.codigo}</StyledTableCell>
+              <StyledTableCell>{product.descricao}</StyledTableCell>
+              <StyledTableCell>R$ {product.preco.toFixed(2)}</StyledTableCell>
+              <StyledTableCell>
+                <ActionButton 
                   variant="contained" 
                   color="primary" 
                   onClick={() => handleEdit(product.id)}
-                  style={{ marginRight: '10px' }}
                 >
                   Editar
-                </Button>
-                <Button 
+                </ActionButton>
+                <ActionButton 
                   variant="contained" 
                   color="secondary" 
                   onClick={() => deleteProduct(product.id)}
                 >
                   Deletar
-                </Button>
-              </TableCell>
+                </ActionButton>
+              </StyledTableCell>
             </TableRow>
           ))}
         </TableBody>

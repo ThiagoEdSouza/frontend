@@ -1,10 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Formik, Form, Field } from 'formik';
+import { Formik, Field, Form } from 'formik';
 import * as Yup from 'yup';
-import { TextField, Button, Typography, Container, Snackbar, Box } from '@mui/material';
+import { Snackbar, Typography, Button } from '@mui/material';
 import MuiAlert from '@mui/material/Alert';
+import {
+  PageContainer,
+  Title,
+  StyledForm,
+  StyledTextField,
+  ImagePreviewContainer,
+  ImagePreview,
+  PreviewImage,
+  RemoveButton,
+  SubmitButton
+} from './EditProductPage.styles';
 
 const validationSchema = Yup.object().shape({
   nome: Yup.string().required('Nome é obrigatório'),
@@ -44,10 +55,14 @@ function EditProductPage() {
 
   const handleSubmit = async (values, { setSubmitting }) => {
     try {
-      // Inclui as imagens atuais no objeto de valores
-      const updatedValues = { ...values, imagens: images };
+      console.log('Submitting updated values:', values);
+      const updatedValues = { 
+        ...values, 
+        imagens: images.filter(img => typeof img === 'string') 
+      };
       
-      await axios.put(`/api/produtos/${id}`, updatedValues);
+      const response = await axios.put(`/api/produtos/${id}`, updatedValues);
+      console.log('Update response:', response.data);
       
       if (images.some(img => img instanceof File)) {
         const formData = new FormData();
@@ -58,16 +73,20 @@ function EditProductPage() {
         });
         
         if (formData.has('imagens')) {
-          await axios.post(`/api/produtos/${id}/imagens`, formData, {
+          const imageResponse = await axios.post(`/api/produtos/${id}/imagens`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
           });
+          console.log('Image upload response:', imageResponse.data);
         }
       }
   
       setSnackbarMessage('Produto atualizado com sucesso!');
       setSnackbarSeverity('success');
       setOpenSnackbar(true);
-      setTimeout(() => navigate('/products'), 2000);
+      
+      setTimeout(() => {
+        navigate('/products');
+      }, 2000);
     } catch (error) {
       console.error('Erro ao atualizar produto:', error);
       setSnackbarMessage('Erro ao atualizar produto. Tente novamente.');
@@ -95,91 +114,86 @@ function EditProductPage() {
   if (!product) return <Typography>Carregando...</Typography>;
 
   return (
-    <Container>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Editar Produto
-      </Typography>
+    <PageContainer>
+      <Title>Editar Produto</Title>
       <Formik
-        initialValues={product}
-        validationSchema={validationSchema}
-        onSubmit={handleSubmit}
-      >
-        {({ errors, touched, isSubmitting }) => (
-          <Form>
-            <Field
-              as={TextField}
-              name="nome"
-              label="Nome"
-              fullWidth
-              margin="normal"
-              error={touched.nome && errors.nome}
-              helperText={touched.nome && errors.nome}
-            />
-            <Field
-              as={TextField}
-              name="codigo"
-              label="Código"
-              fullWidth
-              margin="normal"
-              error={touched.codigo && errors.codigo}
-              helperText={touched.codigo && errors.codigo}
-            />
-            <Field
-              as={TextField}
-              name="descricao"
-              label="Descrição"
-              fullWidth
-              margin="normal"
-              multiline
-              rows={4}
-            />
-            <Field
-              as={TextField}
-              name="preco"
-              label="Preço"
-              type="number"
-              fullWidth
-              margin="normal"
-              error={touched.preco && errors.preco}
-              helperText={touched.preco && errors.preco}
-            />
+  initialValues={product}
+  validationSchema={validationSchema}
+  onSubmit={handleSubmit}
+>
+  {({ errors, touched, isSubmitting }) => (
+    <Form>
+      <Field
+        as={StyledTextField}
+        name="nome"
+        label="Nome"
+        fullWidth
+        error={touched.nome && errors.nome}
+        helperText={touched.nome && errors.nome}
+      />
+      <Field
+        as={StyledTextField}
+        name="codigo"
+        label="Código"
+        fullWidth
+        error={touched.codigo && errors.codigo}
+        helperText={touched.codigo && errors.codigo}
+      />
+      <Field
+        as={StyledTextField}
+        name="descricao"
+        label="Descrição"
+        fullWidth
+        multiline
+        rows={4}
+      />
+      <Field
+        as={StyledTextField}
+        name="preco"
+        label="Preço"
+        type="number"
+        fullWidth
+        error={touched.preco && errors.preco}
+        helperText={touched.preco && errors.preco}
+      />
             
             {/* Bloco para exibir e gerenciar imagens */}
-            <Box mt={2} mb={2}>
-              {images.map((image, index) => (
-                <Box key={index} display="inline-block" mr={1} mb={1}>
-                  {typeof image === 'string' ? (
-                    <img src={`/uploads/${image}`} alt={`Produto ${index}`} width="100" />
-                  ) : (
-                    <img src={URL.createObjectURL(image)} alt={`Preview ${index}`} width="100" />
-                  )}
-                  <Button onClick={() => handleImageRemove(index)} size="small">Remover</Button>
-                </Box>
-              ))}
-            </Box>
-
-            <input
-              accept="image/*"
-              style={{ display: 'none' }}
-              id="raised-button-file"
-              multiple
-              type="file"
-              onChange={handleImageChange}
+            <ImagePreviewContainer>
+        {images.map((image, index) => (
+          <ImagePreview key={index}>
+            <PreviewImage 
+              src={typeof image === 'string' ? `/uploads/${image}` : URL.createObjectURL(image)} 
+              alt={`Produto ${index}`} 
             />
-            <label htmlFor="raised-button-file">
-              <Button variant="contained" component="span">
-                Adicionar Imagens
-              </Button>
-            </label>
-            <Typography variant="caption" display="block" gutterBottom>
-              {images.length} imagem(ns) selecionada(s)
-            </Typography>
-            <Button type="submit" variant="contained" color="primary" disabled={isSubmitting}>
-              Atualizar Produto
-            </Button>
-          </Form>
-        )}
-      </Formik>
+            <RemoveButton onClick={() => handleImageRemove(index)} size="small">
+              X
+            </RemoveButton>
+          </ImagePreview>
+        ))}
+      </ImagePreviewContainer>
+
+      <input
+        accept="image/*"
+        style={{ display: 'none' }}
+        id="raised-button-file"
+        multiple
+        type="file"
+        onChange={handleImageChange}
+      />
+      <label htmlFor="raised-button-file">
+        <Button variant="contained" component="span">
+          Adicionar Imagens
+        </Button>
+      </label>
+      <Typography variant="caption" display="block" gutterBottom>
+        {images.length} imagem(ns) selecionada(s)
+      </Typography>
+      <SubmitButton type="submit" variant="contained" color="primary" disabled={isSubmitting}>
+        Atualizar Produto
+      </SubmitButton>
+    </Form>
+  )}
+</Formik>
       <Snackbar 
         open={openSnackbar} 
         autoHideDuration={6000} 
@@ -193,8 +207,8 @@ function EditProductPage() {
           {snackbarMessage}
         </MuiAlert>
       </Snackbar>
-    </Container>
-  );
+  </PageContainer>
+);
 }
 
 export default EditProductPage;
